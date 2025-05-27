@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { act, renderHook } from '@testing-library/react';
 import { useForm } from '@mantine/form';
-import { ZodResolverOptions, standardSchemaResolver } from './zod-resolver';
+import { StandardSchemaResolverOptions, standardSchemaResolver } from './standard-schema-resolver';
 
 describe('standardSchemaResolver with Zod v3', () => {
   const schema = z.object({
@@ -139,7 +139,7 @@ describe('standardSchemaResolver with Zod v3', () => {
           },
           validate: standardSchemaResolver(
             multipleMessagesForAFieldSchema,
-            options as ZodResolverOptions
+            options as StandardSchemaResolverOptions
           ),
         })
       );

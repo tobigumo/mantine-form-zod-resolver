@@ -1,12 +1,15 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { FormErrors } from '@mantine/form';
 
-export interface ZodResolverOptions {
+export interface StandardSchemaResolverOptions {
   errorPriority?: 'first' | 'last';
 }
 
 // Standard SchemaResolver - Compatible with all Zod versions (v3, v4, v4-mini)
-export function standardSchemaResolver(schema: StandardSchemaV1, options?: ZodResolverOptions) {
+export function standardSchemaResolver(
+  schema: StandardSchemaV1,
+  options?: StandardSchemaResolverOptions
+) {
   return (values: Record<string, unknown>): FormErrors => {
     const result = schema['~standard'].validate(values);
 

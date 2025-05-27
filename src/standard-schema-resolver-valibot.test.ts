@@ -1,18 +1,16 @@
-import { z } from 'zod/v4-mini';
+import * as v from 'valibot';
 import { act, renderHook } from '@testing-library/react';
 import { useForm } from '@mantine/form';
-import { ZodResolverOptions, standardSchemaResolver } from './zod-resolver';
+import { StandardSchemaResolverOptions, standardSchemaResolver } from './standard-schema-resolver';
 
-describe('standardSchemaResolver with Zod v4-mini', () => {
-  const schema = z.object({
-    name: z.string().check(z.minLength(2, { message: 'Name should have at least 2 letters' })),
-    email: z.string().check(z.email({ message: 'Invalid email' })),
-    age: z
-      .number()
-      .check(z.minimum(18, { message: 'You must be at least 18 to create an account' })),
+describe('standardSchemaResolver with Valibot', () => {
+  const schema = v.object({
+    name: v.pipe(v.string(), v.minLength(2, 'Name should have at least 2 letters')),
+    email: v.pipe(v.string(), v.email('Invalid email')),
+    age: v.pipe(v.number(), v.minValue(18, 'You must be at least 18 to create an account')),
   });
 
-  it('validates basic fields with given zod schema', () => {
+  it('validates basic fields with given Valibot schema', () => {
     const hook = renderHook(() =>
       useForm({
         initialValues: {
@@ -41,13 +39,13 @@ describe('standardSchemaResolver with Zod v4-mini', () => {
     });
   });
 
-  const nestedSchema = z.object({
-    nested: z.object({
-      field: z.string().check(z.minLength(2, { message: 'Field should have at least 2 letters' })),
+  const nestedSchema = v.object({
+    nested: v.object({
+      field: v.pipe(v.string(), v.minLength(2, 'Field should have at least 2 letters')),
     }),
   });
 
-  it('validates nested fields with given zod schema', () => {
+  it('validates nested fields with given Valibot schema', () => {
     const hook = renderHook(() =>
       useForm({
         initialValues: {
@@ -66,21 +64,21 @@ describe('standardSchemaResolver with Zod v4-mini', () => {
       'nested.field': 'Field should have at least 2 letters',
     });
 
-    act(() => hook.result.current.setValues({ nested: { field: 'John' } }));
+    act(() => hook.result.current.setValues({ nested: { field: 'Valid value' } }));
     act(() => hook.result.current.validate());
 
     expect(hook.result.current.errors).toStrictEqual({});
   });
 
-  const listSchema = z.object({
-    list: z.array(
-      z.object({
-        name: z.string().check(z.minLength(2, { message: 'Name should have at least 2 letters' })),
+  const listSchema = v.object({
+    list: v.array(
+      v.object({
+        name: v.pipe(v.string(), v.minLength(2, 'Name should have at least 2 letters')),
       })
     ),
   });
 
-  it('validates list fields with given zod schema', () => {
+  it('validates list fields with given Valibot schema', () => {
     const hook = renderHook(() =>
       useForm({
         initialValues: {
@@ -106,14 +104,11 @@ describe('standardSchemaResolver with Zod v4-mini', () => {
   const mandatoryHashMessage = 'There must be a # in the hashtag';
   const notEmptyMessage = 'Hashtag should not be empty';
 
-  const multipleMessagesForAFieldSchema = z.object({
-    hashtag: z.string().check(
-      z.refine((value) => value.length > 0, {
-        message: notEmptyMessage,
-      }),
-      z.refine((value) => value.includes('#'), {
-        message: mandatoryHashMessage,
-      })
+  const multipleValidationsSchema = v.object({
+    hashtag: v.pipe(
+      v.string(),
+      v.check((value) => value.length > 0, notEmptyMessage),
+      v.check((value) => value.includes('#'), mandatoryHashMessage)
     ),
   });
 
@@ -132,7 +127,7 @@ describe('standardSchemaResolver with Zod v4-mini', () => {
     ],
     [undefined, mandatoryHashMessage],
   ])(
-    `provides the proper error for a schema with multiple messages for a field with resolver option %p`,
+    'provides the proper error for a schema with multiple validations with resolver option %p',
     (options, expectedErrorMessage) => {
       const hook = renderHook(() =>
         useForm({
@@ -140,8 +135,8 @@ describe('standardSchemaResolver with Zod v4-mini', () => {
             hashtag: '',
           },
           validate: standardSchemaResolver(
-            multipleMessagesForAFieldSchema,
-            options as ZodResolverOptions
+            multipleValidationsSchema,
+            options as StandardSchemaResolverOptions
           ),
         })
       );
