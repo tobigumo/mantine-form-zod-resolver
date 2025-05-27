@@ -1,13 +1,15 @@
-import { z } from 'zod/v4';
+import { z } from 'zod/v4-mini';
 import { act, renderHook } from '@testing-library/react';
 import { useForm } from '@mantine/form';
 import { ZodResolverOptions, standardSchemaResolver } from './zod-resolver';
 
-describe('standardSchemaResolver with Zod v4', () => {
+describe('standardSchemaResolver with Zod v4-mini', () => {
   const schema = z.object({
-    name: z.string().min(2, { message: 'Name should have at least 2 letters' }),
-    email: z.email({ message: 'Invalid email' }),
-    age: z.number().min(18, { message: 'You must be at least 18 to create an account' }),
+    name: z.string().check(z.minLength(2, { message: 'Name should have at least 2 letters' })),
+    email: z.string().check(z.email({ message: 'Invalid email' })),
+    age: z
+      .number()
+      .check(z.minimum(18, { message: 'You must be at least 18 to create an account' })),
   });
 
   it('validates basic fields with given zod schema', () => {
@@ -41,7 +43,7 @@ describe('standardSchemaResolver with Zod v4', () => {
 
   const nestedSchema = z.object({
     nested: z.object({
-      field: z.string().min(2, { message: 'Field should have at least 2 letters' }),
+      field: z.string().check(z.minLength(2, { message: 'Field should have at least 2 letters' })),
     }),
   });
 
@@ -73,7 +75,7 @@ describe('standardSchemaResolver with Zod v4', () => {
   const listSchema = z.object({
     list: z.array(
       z.object({
-        name: z.string().min(2, { message: 'Name should have at least 2 letters' }),
+        name: z.string().check(z.minLength(2, { message: 'Name should have at least 2 letters' })),
       })
     ),
   });
@@ -105,14 +107,14 @@ describe('standardSchemaResolver with Zod v4', () => {
   const notEmptyMessage = 'Hashtag should not be empty';
 
   const multipleMessagesForAFieldSchema = z.object({
-    hashtag: z
-      .string()
-      .refine((value) => value.length > 0, {
+    hashtag: z.string().check(
+      z.refine((value) => value.length > 0, {
         message: notEmptyMessage,
-      })
-      .refine((value) => value.includes('#'), {
-        message: mandatoryHashMessage,
       }),
+      z.refine((value) => value.includes('#'), {
+        message: mandatoryHashMessage,
+      })
+    ),
   });
 
   it.each([

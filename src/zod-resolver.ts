@@ -1,53 +1,51 @@
-import type { ZodType } from 'zod/v4';
-import type { Schema } from 'zod';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { FormErrors } from '@mantine/form';
 
 export interface ZodResolverOptions {
   errorPriority?: 'first' | 'last';
 }
 
-export function zodResolver(schema: Schema, options?: ZodResolverOptions) {
+// Standard SchemaResolver - Compatible with all Zod versions (v3, v4, v4-mini)
+export function standardSchemaResolver(schema: StandardSchemaV1, options?: ZodResolverOptions) {
   return (values: Record<string, unknown>): FormErrors => {
-    const parsed = schema.safeParse(values);
+    const result = schema['~standard'].validate(values);
 
-    if (parsed.success) {
-      return {};
+    // Check if the result is a Promise
+    if (result instanceof Promise) {
+      throw new Error('Async validation is not supported. Use sync schemas only.');
     }
 
-    const results: FormErrors = {};
+    if (result.issues) {
+      // Validation failed
+      const results: FormErrors = {};
 
-    if ('error' in parsed) {
+      let issues = result.issues;
       if (options?.errorPriority === 'first') {
-        parsed.error.errors.reverse();
+        issues = [...issues].reverse();
       }
-      parsed.error.errors.forEach((error) => {
-        results[error.path.join('.')] = error.message;
+
+      issues.forEach((issue) => {
+        if (issue.path) {
+          const pathString = issue.path
+            .map((segment) =>
+              typeof segment === 'object' && 'key' in segment ? segment.key : segment
+            )
+            .join('.');
+          results[pathString] = issue.message;
+        } else {
+          // If there's no path, treat it as a root error
+          results[''] = issue.message;
+        }
       });
+
+      return results;
     }
 
-    return results;
+    // Validation succeeded
+    return {};
   };
 }
 
-export function zod4Resolver(schema: ZodType, options?: ZodResolverOptions) {
-  return (values: Record<string, unknown>): FormErrors => {
-    const parsed = schema.safeParse(values);
-
-    if (parsed.success) {
-      return {};
-    }
-
-    const results: FormErrors = {};
-
-    if ('error' in parsed) {
-      if (options?.errorPriority === 'first') {
-        parsed.error.issues.reverse();
-      }
-      parsed.error.issues.forEach((error) => {
-        results[error.path.join('.')] = error.message;
-      });
-    }
-
-    return results;
-  };
-}
+// Backward compatibility aliases
+export const zodResolver = standardSchemaResolver;
+export const zod4Resolver = standardSchemaResolver;
