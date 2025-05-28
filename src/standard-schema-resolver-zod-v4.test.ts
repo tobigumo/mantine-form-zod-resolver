@@ -5,9 +5,9 @@ import { StandardSchemaResolverOptions, standardSchemaResolver } from './standar
 
 describe('standardSchemaResolver with Zod v4', () => {
   const schema = z.object({
-    name: z.string().min(2, { message: 'Name should have at least 2 letters' }),
-    email: z.email({ message: 'Invalid email' }),
-    age: z.number().min(18, { message: 'You must be at least 18 to create an account' }),
+    name: z.string().min(2, { error: 'Name should have at least 2 letters' }),
+    email: z.email({ error: 'Invalid email' }),
+    age: z.number().min(18, { error: 'You must be at least 18 to create an account' }),
   });
 
   it('validates basic fields with given zod schema', () => {
@@ -41,7 +41,7 @@ describe('standardSchemaResolver with Zod v4', () => {
 
   const nestedSchema = z.object({
     nested: z.object({
-      field: z.string().min(2, { message: 'Field should have at least 2 letters' }),
+      field: z.string().min(2, { error: 'Field should have at least 2 letters' }),
     }),
   });
 
@@ -73,7 +73,7 @@ describe('standardSchemaResolver with Zod v4', () => {
   const listSchema = z.object({
     list: z.array(
       z.object({
-        name: z.string().min(2, { message: 'Name should have at least 2 letters' }),
+        name: z.string().min(2, { error: 'Name should have at least 2 letters' }),
       })
     ),
   });
@@ -108,10 +108,10 @@ describe('standardSchemaResolver with Zod v4', () => {
     hashtag: z
       .string()
       .refine((value) => value.length > 0, {
-        message: notEmptyMessage,
+        error: notEmptyMessage,
       })
       .refine((value) => value.includes('#'), {
-        message: mandatoryHashMessage,
+        error: mandatoryHashMessage,
       }),
   });
 
