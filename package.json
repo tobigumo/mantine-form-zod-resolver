@@ -86,7 +86,7 @@
     "rollup-plugin-esbuild": "^6.2.1",
     "rollup-plugin-node-externals": "^8.0.0",
     "signale": "^1.4.0",
-    "simple-git": "^3.27.0",
+    "simple-git": "^4.0.1",
     "ts-jest": "^29.3.4",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.32.1",
